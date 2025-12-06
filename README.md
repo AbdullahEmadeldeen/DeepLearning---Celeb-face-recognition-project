@@ -81,8 +81,8 @@ The system uses **FaceNet (InceptionResnetV1)** as the backbone feature extracto
 -   **Embedding Size**: 512 dimensions
 -   **Classes**: 105 Celebrities
 
-## 🤝 Contributing
+## DATA LOCATION 
+https://drive.google.com/drive/folders/1i7PZRyXUerebsoi5IK6sA_9M4deiu8tV?usp=drive_link
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 
