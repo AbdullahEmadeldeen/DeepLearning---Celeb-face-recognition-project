@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celebrity Face Recognition</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 20px;
+      }
+
+      .main-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .sidebar {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        position: sticky;
+        top: 20px;
+      }
+
+      h1 {
+        color: #667eea;
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 2.5em;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+      }
+
+      .upload-section {
+        background: #f8f9fa;
+        border: 3px dashed #667eea;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+      }
+
+      .upload-section:hover {
+        border-color: #764ba2;
+        background: #f0f1ff;
+      }
+
+      .preview-container {
+        width: 100%;
+        max-width: 600px;
+        height: 400px;
+        margin: 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .preview-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .preview-placeholder {
+        color: #999;
+        font-size: 1.2em;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      button {
+        padding: 15px 40px;
+        font-size: 1.1em;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(56, 239, 125, 0.4);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .file-name {
+        margin: 15px 0;
+        color: #666;
+        font-style: italic;
+      }
+
+      .results-section {
+        margin-top: 30px;
+      }
+
+      .result-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.5s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result-card h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+
+      .prediction-main {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #333;
+        margin: 15px 0;
+      }
+
+      .confidence-bar {
+        background: #e0e0e0;
+        border-radius: 10px;
+        height: 30px;
+        margin: 10px 0;
+        overflow: hidden;
+      }
+
+      .confidence-fill {
+        background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        transition: width 1s ease;
+      }
+
+      .top-predictions {
+        margin-top: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+      }
+
+      .top-predictions h4 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .prediction-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #667eea;
+      }
+
+      .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #c33;
+      }
+
+      .success-message {
+        background: #efe;
+        color: #3c3;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #3c3;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Sidebar Styles */
+      .sidebar h2 {
+        color: #667eea;
+        font-size: 1.3em;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .search-box {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #667eea;
+        border-radius: 25px;
+        margin-bottom: 15px;
+        font-size: 0.95em;
+        outline: none;
+      }
+
+      .search-box:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+      }
+
+      .celeb-count {
+        text-align: center;
+        color: #666;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+      }
+
+      .celebrity-list {
+        list-style: none;
+      }
+
+      .celebrity-item {
+        padding: 10px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9em;
+      }
+
+      .celebrity-item:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .celebrity-item.hidden {
+        display: none;
+      }
+
+      .no-results {
+        text-align: center;
+        color: #999;
+        padding: 20px;
+        font-style: italic;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .status-online {
+        background: #38ef7d;
+        box-shadow: 0 0 10px #38ef7d;
+      }
+
+      .status-offline {
+        background: #ff4444;
+        box-shadow: 0 0 10px #ff4444;
+      }
+
+      .api-status {
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        font-size: 0.9em;
+      }
+
+      @media (max-width: 1200px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: relative;
+          max-height: 400px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 1.8em;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Main Content -->
+      <div class="main-content">
+        <h1>🎭 Celebrity Face Recognition</h1>
+        <p class="subtitle">
+          Upload an image and let AI identify the celebrity!
+        </p>
+
+        <div class="upload-section">
+          <div class="preview-container" id="imagePreview">
+            <div class="preview-placeholder">📷 No Image Selected</div>
+          </div>
+
+          <div class="file-name" id="fileName">No file selected</div>
+
+          <input
+            type="file"
+            id="imageInput"
+            accept="image/*"
+            style="display: none"
+          />
+
+          <div class="button-group">
+            <button class="btn-primary" id="uploadBtn">📁 Choose Image</button>
+            <button class="btn-secondary" id="clearBtn">🗑️ Clear</button>
+            <button class="btn-success" id="predictBtn" disabled>
+              🔍 Recognize Celebrity
+            </button>
+          </div>
+        </div>
+
+        <div class="results-section" id="result"></div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="api-status" id="apiStatus">
+          <span class="status-indicator status-offline"></span>
+          Checking API...
+        </div>
+
+        <h2>📋 Available Celebrities</h2>
+
+        <input
+          type="text"
+          class="search-box"
+          id="searchBox"
+          placeholder="🔍 Search celebrities..."
+        />
+
+        <div class="celeb-count" id="celebCount">Loading...</div>
+
+        <ul class="celebrity-list" id="celebrityList">
+          <li class="celebrity-item">Loading celebrities...</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      const uploadBtn = document.getElementById("uploadBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const imageInput = document.getElementById("imageInput");
+      const imagePreview = document.getElementById("imagePreview");
+      const fileName = document.getElementById("fileName");
+      const predictBtn = document.getElementById("predictBtn");
+      const resultDiv = document.getElementById("result");
+      const searchBox = document.getElementById("searchBox");
+      const celebrityList = document.getElementById("celebrityList");
+      const celebCount = document.getElementById("celebCount");
+      const apiStatus = document.getElementById("apiStatus");
+
+      let selectedFile = null;
+      let allCelebrities = [];
+
+      // API URLs
+      const API_BASE = "http://127.0.0.1:8000";
+      const PREDICT_URL = `${API_BASE}/predict`;
+      const CELEBRITIES_URL = `${API_BASE}/celebrities`;
+      const HEALTH_URL = `${API_BASE}/health`;
+
+      // Check API health on load
+      async function checkAPIHealth() {
+        try {
+          const response = await fetch(HEALTH_URL);
+          const data = await response.json();
+
+          if (data.status === "healthy") {
+            apiStatus.innerHTML = `
+                        <span class="status-indicator status-online"></span>
+                        API Online - ${data.device.toUpperCase()}
+                    `;
+          } else {
+            throw new Error("API not healthy");
+          }
+        } catch (error) {
+          apiStatus.innerHTML = `
+                    <span class="status-indicator status-offline"></span>
+                    API Offline
+                `;
+        }
+      }
+
+      // Load celebrities list
+      async function loadCelebrities() {
+        try {
+          const response = await fetch(CELEBRITIES_URL);
+          const data = await response.json();
+
+          allCelebrities = data.celebrities;
+          displayCelebrities(allCelebrities);
+          celebCount.textContent = `Total: ${data.total_celebrities} celebrities`;
+        } catch (error) {
+          celebrityList.innerHTML =
+            '<li class="celebrity-item" style="color: red;">Failed to load celebrities</li>';
+          celebCount.textContent = "Error loading count";
+        }
+      }
+
+      // Display celebrities
+      function displayCelebrities(celebrities) {
+        if (celebrities.length === 0) {
+          celebrityList.innerHTML =
+            '<div class="no-results">No celebrities found</div>';
+          return;
+        }
+
+        celebrityList.innerHTML = celebrities
+          .map(
+            (celeb, index) =>
+              `<li class="celebrity-item" data-name="${celeb.toLowerCase()}">
+                    ${index + 1}. ${celeb}
+                </li>`
+          )
+          .join("");
+      }
+
+      // Search functionality
+      searchBox.addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = document.querySelectorAll(".celebrity-item");
+
+        let visibleCount = 0;
+        items.forEach((item) => {
+          const name = item.getAttribute("data-name");
+          if (name && name.includes(searchTerm)) {
+            item.classList.remove("hidden");
+            visibleCount++;
+          } else {
+            item.classList.add("hidden");
+          }
+        });
+
+        celebCount.textContent = `Showing: ${visibleCount} of ${allCelebrities.length} celebrities`;
+      });
+
+      // Upload button
+      uploadBtn.onclick = () => imageInput.click();
+
+      // File selection
+      imageInput.onchange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        selectedFile = file;
+        fileName.textContent = `Selected: ${file.name}`;
+        predictBtn.disabled = false;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          imagePreview.innerHTML = `<img src="${reader.result}" alt="Preview" />`;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      // Clear button
+      clearBtn.onclick = () => {
+        selectedFile = null;
+        imagePreview.innerHTML =
+          '<div class="preview-placeholder">📷 No Image Selected</div>';
+        fileName.textContent = "No file selected";
+        resultDiv.innerHTML = "";
+        imageInput.value = "";
+        predictBtn.disabled = true;
+      };
+
+      // Predict button
+      predictBtn.onclick = async () => {
+        if (!selectedFile) {
+          resultDiv.innerHTML =
+            '<div class="error-message">Please upload an image first.</div>';
+          return;
+        }
+
+        resultDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
+                </div>
+            `;
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+          const response = await fetch(PREDICT_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success && data.faces && data.faces.length > 0) {
+            displayResults(data);
+          } else if (!data.success) {
+            resultDiv.innerHTML = `
+                        <div class="error-message">
+                            ${data.message || "No face detected in the image."}
+                        </div>
+                    `;
+          } else {
+            resultDiv.innerHTML =
+              '<div class="error-message">Unexpected response from server.</div>';
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          resultDiv.innerHTML = `
+                    <div class="error-message">
+                        Error connecting to backend: ${error.message}
+                    </div>
+                `;
+        }
+      };
+
+      // Display results
+      function displayResults(data) {
+        const CONFIDENCE_THRESHOLD = 0.85; // 85% threshold
+        let hasHighConfidenceFaces = false;
+        let resultHTML = "";
+
+        // Check if any faces meet the confidence threshold
+        data.faces.forEach((face) => {
+          if (face.prediction.confidence >= CONFIDENCE_THRESHOLD) {
+            hasHighConfidenceFaces = true;
+          }
+        });
+
+        if (!hasHighConfidenceFaces) {
+          resultDiv.innerHTML = `
+                    <div class="error-message">
+                        ⚠️ No confident predictions found. All predictions are below 85% confidence threshold.
+                        <br><br>
+                        <strong>Possible reasons:</strong>
+                        <ul style="margin-top: 10px; text-align: left;">
+                            <li>The person is not in our celebrity database</li>
+                            <li>The image quality is too low</li>
+                            <li>The face is partially obscured or at a bad angle</li>
+                            <li>Poor lighting conditions</li>
+                        </ul>
+                        <p style="margin-top: 15px;">Please try another image with a clear, well-lit face.</p>
+                    </div>
+                `;
+          return;
+        }
+
+        resultHTML = `
+                <div class="success-message">
+                    ✅ Successfully detected ${data.num_faces_detected} face(s)!
+                </div>
+            `;
+
+        data.faces.forEach((face) => {
+          const confidence = (face.prediction.confidence * 100).toFixed(2);
+          const detectionConf = (face.detection_confidence * 100).toFixed(2);
+
+          // Only show faces with confidence >= 85%
+          if (face.prediction.confidence >= CONFIDENCE_THRESHOLD) {
+            resultHTML += `
+                        <div class="result-card">
+                            <h3>👤 Face ${face.face_index + 1}</h3>
+                            
+                            <div class="prediction-main">
+                                🎬 ${face.prediction.celebrity_name}
+                            </div>
+                            
+                            <div>
+                                <strong>Recognition Confidence:</strong>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confidence}%">
+                                        ${confidence}%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 10px;">
+                                <strong>Face Detection Confidence:</strong> ${detectionConf}%
+                            </div>
+                            
+                            <div class="top-predictions">
+                                <h4>🏆 Top 3 Predictions:</h4>
+                                ${face.top_3_predictions
+                                  .map(
+                                    (pred, idx) => `
+                                    <div class="prediction-item">
+                                        <span>${idx + 1}. ${
+                                      pred.celebrity_name
+                                    }</span>
+                                        <span><strong>${(
+                                          pred.confidence * 100
+                                        ).toFixed(2)}%</strong></span>
+                                    </div>
+                                `
+                                  )
+                                  .join("")}
+                            </div>
+                        </div>
+                    `;
+          } else {
+            // Show message for low confidence faces
+            resultHTML += `
+                        <div class="result-card" style="opacity: 0.7;">
+                            <h3>👤 Face ${face.face_index + 1}</h3>
+                            <div class="error-message" style="margin: 15px 0;">
+                                ⚠️ Confidence too low (${confidence}%) - Prediction hidden
+                                <br>
+                                <small>Minimum required: 85%</small>
+                            </div>
+                        </div>
+                    `;
+          }
+        });
+
+        resultDiv.innerHTML = resultHTML;
+      }
+
+      // Initialize on page load
+      window.onload = () => {
+        checkAPIHealth();
+        loadCelebrities();
+      };
+    </script>
+  </body>
+</html>
